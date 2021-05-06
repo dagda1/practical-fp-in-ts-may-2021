@@ -7,6 +7,8 @@
  * your day-to-day problems.
  */
 
+import { pipe } from "@effect-ts/core"
+
 /**
  * Segment:
  *
@@ -32,6 +34,21 @@ export declare const trueValue: BooleanADT
 
 export declare const falseValue: BooleanADT
 
+class Value {
+  readonly _tag = "Value"
+  constructor(readonly value: number) {}
+}
+
+class Add {
+  readonly _tag = "Add"
+  constructor(readonly op1: MathExpr, readonly op2: MathExpr) {}
+}
+
+class Sub {
+  readonly _tag = "Sub"
+  constructor(readonly op1: MathExpr, readonly op2: MathExpr) {}
+}
+
 /**
  * Exercise:
  *
@@ -42,7 +59,19 @@ export declare const falseValue: BooleanADT
  * - Mul (describe a multiplication operation of 2 expressions)
  * - Div (describe a division operation of 2 expressions)
  */
-export type MathExpr = never
+export type MathExpr = Value | Add | Sub
+
+export function value(value: number): MathExpr {
+  return new Value(value)
+}
+
+export function add(x: MathExpr): (x: MathExpr) => MathExpr {
+  return (y: MathExpr) => new Add(x, y)
+}
+
+export function sub(x: MathExpr): (x: MathExpr) => MathExpr {
+  return (y: MathExpr) => new Sub(x, y)
+}
 
 /**
  * Exercise:
@@ -55,14 +84,23 @@ export type MathExpr = never
  *
  * Create a small program using the MathExpr constructors
  */
-export declare const program: MathExpr
+export const program = pipe(value(0), add(value(4)), sub(value(3)))
 
 /**
  * Exercise:
  *
  * Implement the function evaluate
  */
-export declare function evaluate(expr: MathExpr): number
+export function evaluate(expr: MathExpr): number {
+  switch (expr._tag) {
+    case "Value":
+      return expr.value
+    case "Add":
+      return evaluate(expr.op1) + evaluate(expr.op2)
+    case "Sub":
+      return evaluate(expr.op2) - evaluate(expr.op1)
+  }
+}
 
 /**
  * Exercise:
